@@ -1,4 +1,4 @@
-%%writefile app.py
+
 import streamlit as st
 import librosa
 import numpy as np
@@ -23,18 +23,27 @@ model = load_model()
 
 def extract_features(file_path):
     signal, sr = librosa.load(file_path, sr=16000, duration=3)
+
+    # MFCC 40 — mean + std = 80 features
     mfcc = librosa.feature.mfcc(y=signal, sr=sr, n_mfcc=40)
     mfcc_mean = np.mean(mfcc, axis=1)
     mfcc_std = np.std(mfcc, axis=1)
+
+    # Chroma = 12 features
     chroma = librosa.feature.chroma_stft(y=signal, sr=sr)
     chroma_mean = np.mean(chroma, axis=1)
+
+    # Mel = 20 features
     mel = librosa.feature.melspectrogram(y=signal, sr=sr)
     mel_mean = np.mean(mel, axis=1)[:20]
+
+    # ZCR + RMS = 2 features
     zcr = np.mean(librosa.feature.zero_crossing_rate(signal))
     rms = np.mean(librosa.feature.rms(y=signal))
+
+    # Total = 80 + 12 + 20 + 2 = 114 ✅
     return np.concatenate([mfcc_mean, mfcc_std, chroma_mean, mel_mean, [zcr, rms]])
 
-# Header
 col1, col2 = st.columns([1, 5])
 with col1:
     st.markdown("## 🎙️")
